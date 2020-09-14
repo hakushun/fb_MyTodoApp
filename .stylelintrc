@@ -1,0 +1,27 @@
+{
+  "extends": [
+    "stylelint-config-standard"
+  ],
+  "plugins": [
+    "stylelint-order"
+  ],
+  "rules": {
+    "indentation": "tab",
+    "at-rule-no-unknown":[true, {
+      "ignoreAtRules": ["mixin", "extends", "include"]
+    }],
+    "declaration-no-important": true,
+    "selector-max-universal": 0,
+    "selector-max-id": 0,
+    "no-descending-specificity": null,
+    "no-duplicate-selectors": null,
+    "block-no-empty": null,
+    "order/order": [
+      "custom-properties",
+      "declarations"
+    ],
+    "order/properties-alphabetical-order": true,
+    "declaration-colon-newline-after": null
+  },
+  "ignoreFiles": ["**/*.json"]
+}

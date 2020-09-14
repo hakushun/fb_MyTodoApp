@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="robots" content="noindex" />
+		<title>MyTodoApp</title>
+		<meta name="description" content="Todo App">
+		<!-- アドレスバー等のブラウザのUIを非表示 -->
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<!-- default（Safariと同じ） / black（黒） / black-translucent（ステータスバーをコンテンツに含める） -->
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<!-- ホーム画面に表示されるアプリ名 -->
+		<meta name="apple-mobile-web-app-title" content="MyTodoApp">
+		<!-- ホーム画面に表示されるアプリアイコン -->
+		<link rel="apple-touch-icon" href="/appicon-192.png">
+		<meta name="theme-color" content="#ffffff" />
+		<link rel="manifest" href="/manifest.json">
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700&amp;family=Noto+Sans:wght@400;700&amp;display=swap" rel="stylesheet" crossorigin>
+	</head>
+	<body>
+		<noscript><h2>JavaScript is disabled in your browser.<br/>Please enable JavaScript.</h2></noscript>
+		<div id="app" />
+		<script>
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('sw.js').then((reg) => {
+					console.log('Service worker registered.');
+				});
+			}
+		</script>
+	</body>
+</html>
