@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../redux/modules/reducers';
 import {
@@ -14,6 +14,11 @@ import {
 } from '../../redux/modules/todos';
 import { toggleProjectFormIsShown } from '../../redux/modules/projectFormIsShown';
 import { toggleAriaHidden, toggleScrollLock } from '../../libs/utilFunctions';
+import {
+	changeProject,
+	editProject,
+	selectProject,
+} from '../../redux/modules/project';
 
 type Props = {
 	currentUser: firebase.User | null;
@@ -25,17 +30,17 @@ const Component: React.FC<Props> = React.memo(
 		const isLoading = useSelector(
 			(state: RootState) => state.projects.isLoading,
 		);
+		const project = useSelector(selectProject);
 		const projects = useSelector((state: RootState) => state.projects.projects);
 		const todos = useSelector((state: RootState) => state.todos.todos);
-		const initialProject = { id: 0, title: '', isComplete: false };
-		const [project, setProject] = useState<typeProject>(initialProject);
+		// const initialProject = { id: 0, title: '', isComplete: false };
 
 		/**
 		 * inputへの入力内容を制御する関数
 		 */
 		const handleChange = useCallback(
 			(e: React.ChangeEvent<HTMLInputElement>) => {
-				setProject({ ...project, title: e.target.value });
+				dispatch(changeProject(e.target.value));
 			},
 			[project],
 		);
@@ -48,7 +53,7 @@ const Component: React.FC<Props> = React.memo(
 				e.preventDefault();
 				if (!project.title) return;
 				currentUser && dispatch(addProject(project.title, currentUser.uid));
-				setProject(initialProject);
+				dispatch(changeProject(''));
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
 				dispatch(toggleProjectFormIsShown(false));
@@ -71,7 +76,7 @@ const Component: React.FC<Props> = React.memo(
 						dispatch(deleteTodosWithProject(prjct.id, currentUser.uid));
 				}
 			},
-			[currentUser, setProject],
+			[currentUser],
 		);
 
 		/**
@@ -83,12 +88,12 @@ const Component: React.FC<Props> = React.memo(
 				prjct: typeProject,
 			) => {
 				e.preventDefault();
-				setProject(prjct);
+				dispatch(editProject(prjct));
 				toggleAriaHidden('true');
 				toggleScrollLock('true');
 				dispatch(toggleProjectFormIsShown(true));
 			},
-			[setProject],
+			[dispatch],
 		);
 
 		/**
@@ -99,7 +104,7 @@ const Component: React.FC<Props> = React.memo(
 				e.preventDefault();
 				if (!project.title) return;
 				currentUser && dispatch(updateProject(project, currentUser.uid));
-				setProject(initialProject);
+				dispatch(changeProject(''));
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
 				dispatch(toggleProjectFormIsShown(false));
@@ -113,12 +118,12 @@ const Component: React.FC<Props> = React.memo(
 		const handleCancelInput = useCallback(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
-				setProject(initialProject);
+				dispatch(changeProject(''));
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
 				dispatch(toggleProjectFormIsShown(false));
 			},
-			[setProject],
+			[dispatch],
 		);
 
 		/**
@@ -128,6 +133,7 @@ const Component: React.FC<Props> = React.memo(
 			if (items.length === 0) return false;
 			return items.every((item) => item.status === 'complete');
 		}, []);
+
 		return (
 			<Project
 				projects={projects}
