@@ -4,8 +4,8 @@ import { Project as typeProject } from '../../redux/modules/projects';
 import TodoForm from './TodoForm';
 import TodoList from './TodoList';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../redux/modules/reducers';
 import { Key } from '.';
+import { selectTodoFormIsShown } from '../../redux/modules/todoFormIsShown';
 
 type Props = {
 	isLoading: boolean;
@@ -63,9 +63,7 @@ const TodoApp: React.FC<Props> = React.memo(
 		handleSort,
 		handleListByProject,
 	}): JSX.Element => {
-		const todoFormIsShown = useSelector(
-			(state: RootState) => state.todoFormIsShown,
-		);
+		const todoFormIsShown = useSelector(selectTodoFormIsShown);
 
 		return (
 			<>

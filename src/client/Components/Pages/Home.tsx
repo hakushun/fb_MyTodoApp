@@ -7,8 +7,8 @@ import { downloadProjects } from '../../redux/modules/projects';
 import { useDispatch, useSelector } from 'react-redux';
 import * as H from 'history';
 import ModalCover from '../Common/Modal/ModalCover';
-import { RootState } from '../../redux/modules/reducers';
 import { selectProjectFormIsShown } from '../../redux/modules/projectFormIsShown';
+import { selectTodoFormIsShown } from '../../redux/modules/todoFormIsShown';
 
 type Props = {
 	history: H.History;
@@ -20,9 +20,7 @@ const home: React.FC<Props> = React.memo(
 	({ history, currentUser, setCurrentUser }) => {
 		const dispatch = useDispatch();
 		const projectFormIsShown = useSelector(selectProjectFormIsShown);
-		const todoFormIsShown = useSelector(
-			(state: RootState) => state.todoFormIsShown,
-		);
+		const todoFormIsShown = useSelector(selectTodoFormIsShown);
 
 		// login済みであればfirestoreからデータを取得しlocal stateに格納
 		// 未loginであればlogin formに遷移
