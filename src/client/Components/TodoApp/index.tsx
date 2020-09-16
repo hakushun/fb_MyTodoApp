@@ -12,11 +12,16 @@ import {
 import TodoApp from './TodoApp';
 import { toggleTodoFormIsShown } from '../../redux/modules/todoFormIsShown';
 import {
-	getToday,
 	toggleAriaHidden,
 	toggleScrollLock,
 	statusToNumber,
 } from '../../libs/utilFunctions';
+import {
+	changeTodo,
+	editTodo,
+	resetTodo,
+	selectTodo,
+} from '../../redux/modules/todo';
 
 type Props = {
 	currentUser: firebase.User | null;
@@ -26,17 +31,10 @@ export type Key = 'id' | 'duedate' | 'status' | 'projectId';
 const Component: React.FC<Props> = React.memo(
 	({ currentUser }): JSX.Element => {
 		const dispatch = useDispatch();
+		const todo = useSelector(selectTodo);
 		const todos = useSelector((state: RootState) => state.todos.todos);
 		const isLoading = useSelector((state: RootState) => state.todos.isLoading);
 		const projects = useSelector((state: RootState) => state.projects.projects);
-		const initialTodo: typeTodo = {
-			id: 0,
-			title: '',
-			dueDate: getToday(),
-			status: 'new',
-			projectId: 0,
-		};
-		const [todo, setTodo] = useState<typeTodo>(initialTodo);
 		const [localTodos, setLocalTodos] = useState<typeTodo[]>([...todos]);
 		const [sortedKeys, setSortedKeys] = useState<Key>('id');
 		const [selectedPrjId, setSelectedPrjId] = useState<string>('0');
@@ -59,7 +57,7 @@ const Component: React.FC<Props> = React.memo(
 		 */
 		const handleChange = useCallback(
 			(e: React.ChangeEvent<HTMLInputElement>, key: string) => {
-				setTodo({ ...todo, [key]: e.target.value });
+				dispatch(changeTodo({ key, value: e.target.value }));
 			},
 			[todo],
 		);
@@ -76,7 +74,7 @@ const Component: React.FC<Props> = React.memo(
 					dispatch(
 						addTodo(todo.title, todo.dueDate, todo.projectId, currentUser.uid),
 					);
-				setTodo(initialTodo);
+				dispatch(resetTodo());
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
 				dispatch(toggleTodoFormIsShown(false));
@@ -103,12 +101,12 @@ const Component: React.FC<Props> = React.memo(
 		const handleEditTodo = useCallback(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, item: typeTodo) => {
 				e.preventDefault();
-				setTodo({ ...item });
+				dispatch(editTodo({ ...item }));
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
 				dispatch(toggleTodoFormIsShown(true));
 			},
-			[setTodo],
+			[dispatch],
 		);
 
 		/**
@@ -119,7 +117,7 @@ const Component: React.FC<Props> = React.memo(
 				e.preventDefault();
 				if (!todo.title) return;
 				currentUser && dispatch(updateTodo(todo, currentUser.uid));
-				setTodo(initialTodo);
+				dispatch(resetTodo());
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
 				dispatch(toggleTodoFormIsShown(false));
@@ -133,12 +131,12 @@ const Component: React.FC<Props> = React.memo(
 		const handleCancelInput = useCallback(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
-				setTodo(initialTodo);
+				dispatch(resetTodo());
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
 				dispatch(toggleTodoFormIsShown(false));
 			},
-			[setTodo],
+			[dispatch],
 		);
 
 		/**
@@ -157,9 +155,9 @@ const Component: React.FC<Props> = React.memo(
 		const handleSelectProject = useCallback(
 			(projectId: string) => {
 				const parsedId = parseInt(projectId);
-				setTodo({ ...todo, projectId: parsedId });
+				dispatch(changeTodo({ key: 'projectId', value: parsedId }));
 			},
-			[todo],
+			[dispatch],
 		);
 
 		/**
