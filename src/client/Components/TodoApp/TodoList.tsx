@@ -9,7 +9,7 @@ import Heading2 from '../Common/Heading/Heading2';
 import ButtonWrapper from '../Common/Buttons/ButtonWrapper';
 import PrimaryButton from '../Common/Buttons/PrimaryButton';
 import Loading from '../Common/Loading/Bouncing';
-import { Key } from '.';
+import { Key } from '../../redux/modules/sortedKey';
 
 const Selectbox = styled.select`
 	background-color: #fff;

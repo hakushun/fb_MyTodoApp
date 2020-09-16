@@ -22,11 +22,11 @@ import {
 	resetTodo,
 	selectTodo,
 } from '../../redux/modules/todo';
+import { changeKey, selectSortedKey, Key } from '../../redux/modules/sortedKey';
 
 type Props = {
 	currentUser: firebase.User | null;
 };
-export type Key = 'id' | 'duedate' | 'status' | 'projectId';
 
 const Component: React.FC<Props> = React.memo(
 	({ currentUser }): JSX.Element => {
@@ -35,8 +35,8 @@ const Component: React.FC<Props> = React.memo(
 		const todos = useSelector((state: RootState) => state.todos.todos);
 		const isLoading = useSelector((state: RootState) => state.todos.isLoading);
 		const projects = useSelector((state: RootState) => state.projects.projects);
+		const sortedKey = useSelector(selectSortedKey);
 		const [localTodos, setLocalTodos] = useState<typeTodo[]>([...todos]);
-		const [sortedKeys, setSortedKeys] = useState<Key>('id');
 		const [selectedPrjId, setSelectedPrjId] = useState<string>('0');
 
 		/**
@@ -225,7 +225,7 @@ const Component: React.FC<Props> = React.memo(
 		 */
 		const handleSort = useCallback(
 			(key: Key) => {
-				setSortedKeys(key);
+				dispatch(changeKey(key));
 				if (key === 'id') {
 					setLocalTodos([...todos.sort((a, b) => (a.id < b.id ? -1 : 1))]);
 					return;
@@ -279,23 +279,23 @@ const Component: React.FC<Props> = React.memo(
 
 		// todosに変更があってもソートの内容は保持されたまま表示される
 		useEffect(() => {
-			if (sortedKeys === 'id') {
+			if (sortedKey === 'id') {
 				handleSort('id');
 				return;
 			}
-			if (sortedKeys === 'duedate') {
+			if (sortedKey === 'duedate') {
 				handleSort('duedate');
 				return;
 			}
-			if (sortedKeys === 'status') {
+			if (sortedKey === 'status') {
 				handleSort('status');
 				return;
 			}
-			if (sortedKeys === 'projectId') {
+			if (sortedKey === 'projectId') {
 				handleSort('projectId');
 				return;
 			}
-		}, [sortedKeys, todos]);
+		}, [sortedKey, todos]);
 
 		return (
 			<TodoApp

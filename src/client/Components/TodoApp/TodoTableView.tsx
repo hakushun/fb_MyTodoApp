@@ -4,7 +4,7 @@ import { Project as typeProject } from '../../redux/modules/projects';
 import styled from 'styled-components';
 import TernaryButton from '../Common/Buttons/TernaryButton';
 import QuaternaryButton from '../Common/Buttons/QuaternaryButton';
-import { Key } from '.';
+import { Key } from '../../redux/modules/sortedKey';
 
 const TableWrapper = styled.div`
 	margin-top: 20px;

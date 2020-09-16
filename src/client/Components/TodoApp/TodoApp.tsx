@@ -4,8 +4,8 @@ import { Project as typeProject } from '../../redux/modules/projects';
 import TodoForm from './TodoForm';
 import TodoList from './TodoList';
 import { useSelector } from 'react-redux';
-import { Key } from '.';
 import { selectTodoFormIsShown } from '../../redux/modules/todoFormIsShown';
+import { Key } from '../../redux/modules/sortedKey';
 
 type Props = {
 	isLoading: boolean;
