@@ -23,6 +23,10 @@ import {
 	selectTodo,
 } from '../../redux/modules/todo';
 import { changeKey, selectSortedKey, Key } from '../../redux/modules/sortedKey';
+import {
+	changePrjId,
+	selectSelectedPrjId,
+} from '../../redux/modules/selectedPrjId';
 
 type Props = {
 	currentUser: firebase.User | null;
@@ -36,8 +40,8 @@ const Component: React.FC<Props> = React.memo(
 		const isLoading = useSelector((state: RootState) => state.todos.isLoading);
 		const projects = useSelector((state: RootState) => state.projects.projects);
 		const sortedKey = useSelector(selectSortedKey);
+		const selectedPrjId = useSelector(selectSelectedPrjId);
 		const [localTodos, setLocalTodos] = useState<typeTodo[]>([...todos]);
-		const [selectedPrjId, setSelectedPrjId] = useState<string>('0');
 
 		/**
 		 * 入力フォームを表示する関数
@@ -260,9 +264,9 @@ const Component: React.FC<Props> = React.memo(
 		 */
 		const handleListByProject = useCallback(
 			(e: React.ChangeEvent<HTMLSelectElement>) => {
-				setSelectedPrjId(e.target.value);
+				dispatch(changePrjId(e.target.value));
 			},
-			[setSelectedPrjId],
+			[dispatch],
 		);
 
 		// 選択されたprojectのtodoのみを表示させる
