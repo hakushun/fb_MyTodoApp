@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as H from 'history';
 import ModalCover from '../Common/Modal/ModalCover';
 import { RootState } from '../../redux/modules/reducers';
+import { selectProjectFormIsShown } from '../../redux/modules/projectFormIsShown';
 
 type Props = {
 	history: H.History;
@@ -18,9 +19,7 @@ type Props = {
 const home: React.FC<Props> = React.memo(
 	({ history, currentUser, setCurrentUser }) => {
 		const dispatch = useDispatch();
-		const projectFormIsShown = useSelector(
-			(state: RootState) => state.projectFormIsShown,
-		);
+		const projectFormIsShown = useSelector(selectProjectFormIsShown);
 		const todoFormIsShown = useSelector(
 			(state: RootState) => state.todoFormIsShown,
 		);

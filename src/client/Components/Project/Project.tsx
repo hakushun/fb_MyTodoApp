@@ -3,8 +3,8 @@ import { Project as typeProject } from '../../redux/modules/projects';
 import ProjectForm from './ProjectForm';
 import ProjectList from './ProjectList';
 import { Todo as typeTodo } from '../../redux/modules/todos';
-import { RootState } from '../../redux/modules/reducers';
 import { useSelector } from 'react-redux';
+import { selectProjectFormIsShown } from '../../redux/modules/projectFormIsShown';
 
 type Props = {
 	projects: typeProject[];
@@ -44,9 +44,8 @@ const Project: React.FC<Props> = React.memo(
 		handleCancelInput,
 		isTodosComplete,
 	}) => {
-		const projectFormIsShown = useSelector(
-			(state: RootState) => state.projectFormIsShown,
-		);
+		const projectFormIsShown = useSelector(selectProjectFormIsShown);
+
 		return (
 			<>
 				{projectFormIsShown && (
