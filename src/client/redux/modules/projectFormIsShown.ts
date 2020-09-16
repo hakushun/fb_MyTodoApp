@@ -1,32 +1,24 @@
-import { Reducer } from 'redux';
+import actionCreatorFactory from 'typescript-fsa';
+import { reducerWithInitialState } from 'typescript-fsa-reducers';
+import { createSelector } from 'reselect';
+import { RootState } from './reducers';
 
-// action type
-const toogle_projectFormIsShown = 'toogle_projectFormIsShown';
+const actionCreator = actionCreatorFactory();
 
-type ProjectFormIsShown = {
-	type: typeof toogle_projectFormIsShown;
-	payload: boolean;
-};
+export const toggleProjectFormIsShown = actionCreator<boolean>(
+	'toogle_projectFormIsShown',
+);
 
-// action creator
-export const toggleProjectFormIsShown = (
-	boolean: boolean,
-): ProjectFormIsShown => {
-	return { type: toogle_projectFormIsShown, payload: boolean };
-};
+const reducer = reducerWithInitialState(false).case(
+	toggleProjectFormIsShown,
+	(_state, payload) => {
+		return payload;
+	},
+);
 
-type Action = ProjectFormIsShown;
+export default reducer;
 
-const projectFormIsShown: Reducer<boolean, Action> = (
-	state = false,
-	action,
-): boolean => {
-	switch (action.type) {
-		case toogle_projectFormIsShown:
-			return action.payload;
-		default:
-			return state;
-	}
-};
-
-export default projectFormIsShown;
+export const selectProjectFormIsShown = createSelector(
+	[(state: RootState) => state.projectFormIsShown],
+	(projectFormIsShown) => projectFormIsShown,
+);
