@@ -2,7 +2,7 @@ import actionCreatorFactory from 'typescript-fsa';
 import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { createSelector } from 'reselect';
 import { RootState } from './reducers';
-import { Project } from './projects';
+import { addProject, Project, updateProject } from './projects';
 
 const actionCreator = actionCreatorFactory();
 
@@ -21,7 +21,9 @@ const reducer = reducerWithInitialState(initialState)
 	})
 	.case(editProject, (state, payload) => {
 		return { ...state, ...payload };
-	});
+	})
+	.case(addProject, () => initialState)
+	.case(updateProject, () => initialState);
 
 export default reducer;
 
