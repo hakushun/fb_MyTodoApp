@@ -4,7 +4,11 @@ import { steps, StepAction } from 'redux-effects-steps';
 import { createSelector } from 'reselect';
 import { RootState } from './reducers';
 import axios from 'axios';
-import { savesProjects, calculateId } from '../../libs/utilFunctions';
+import {
+	savesProjects,
+	calculateId,
+	isTodosComplete,
+} from '../../libs/utilFunctions';
 
 axios.defaults.withCredentials = true;
 
@@ -146,4 +150,31 @@ export const selectProjects = createSelector(
 export const selectIsLoading = createSelector(
 	[(state: RootState) => state.projects],
 	(projects) => projects.isLoading,
+);
+
+export const selectIncompleteProjects = createSelector(
+	[
+		(state: RootState) => state.projects.projects,
+		(state: RootState) => state.todos.todos,
+	],
+	(projects, todos) => {
+		const incompleteProjects = projects.filter(
+			(project) =>
+				!isTodosComplete(todos.filter((todo) => project.id === todo.projectId)),
+		);
+		return incompleteProjects;
+	},
+);
+
+export const selectCompleteProjects = createSelector(
+	[
+		(state: RootState) => state.projects.projects,
+		(state: RootState) => state.todos.todos,
+	],
+	(projects, todos) => {
+		const completeProjects = projects.filter((project) =>
+			isTodosComplete(todos.filter((todo) => project.id === todo.projectId)),
+		);
+		return completeProjects;
+	},
 );
