@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../redux/modules/reducers';
 import {
 	addTodo,
 	deleteTodo,
@@ -8,6 +7,8 @@ import {
 	changeStatus,
 	Status as typeStatus,
 	Todo as typeTodo,
+	selectIsLoading,
+	selectTodos,
 } from '../../redux/modules/todos';
 import TodoApp from './TodoApp';
 import { toggleTodoFormIsShown } from '../../redux/modules/todoFormIsShown';
@@ -37,8 +38,8 @@ const Component: React.FC<Props> = React.memo(
 	({ currentUser }): JSX.Element => {
 		const dispatch = useDispatch();
 		const todo = useSelector(selectTodo);
-		const todos = useSelector((state: RootState) => state.todos.todos);
-		const isLoading = useSelector((state: RootState) => state.todos.isLoading);
+		const todos = useSelector(selectTodos);
+		const isLoading = useSelector(selectIsLoading);
 		const projects = useSelector(selectProjects);
 		const sortedKey = useSelector(selectSortedKey);
 		const selectedPrjId = useSelector(selectSelectedPrjId);
@@ -77,7 +78,12 @@ const Component: React.FC<Props> = React.memo(
 				if (!todo.title) return;
 				currentUser &&
 					dispatch(
-						addTodo(todo.title, todo.dueDate, todo.projectId, currentUser.uid),
+						addTodo({
+							title: todo.title,
+							dueDate: todo.dueDate,
+							projectId: todo.projectId,
+							uid: currentUser.uid,
+						}),
 					);
 				dispatch(resetTodo());
 				toggleAriaHidden('false');
@@ -94,7 +100,8 @@ const Component: React.FC<Props> = React.memo(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, item: typeTodo) => {
 				e.preventDefault();
 				if (window.confirm(`本当に${item.title}を削除しますか？`)) {
-					currentUser && dispatch(deleteTodo(item.id, currentUser.uid));
+					currentUser &&
+						dispatch(deleteTodo({ id: item.id, uid: currentUser.uid }));
 				}
 			},
 			[currentUser],
@@ -121,7 +128,7 @@ const Component: React.FC<Props> = React.memo(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
 				if (!todo.title) return;
-				currentUser && dispatch(updateTodo(todo, currentUser.uid));
+				currentUser && dispatch(updateTodo({ todo, uid: currentUser.uid }));
 				dispatch(resetTodo());
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
@@ -149,7 +156,8 @@ const Component: React.FC<Props> = React.memo(
 		 */
 		const handleChangeStatus = useCallback(
 			(item: typeTodo, status: typeStatus) => {
-				currentUser && dispatch(changeStatus(item.id, status, currentUser.uid));
+				currentUser &&
+					dispatch(changeStatus({ id: item.id, status, uid: currentUser.uid }));
 			},
 			[currentUser],
 		);

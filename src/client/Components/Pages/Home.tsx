@@ -28,7 +28,7 @@ const home: React.FC<Props> = React.memo(
 			auth.onAuthStateChanged((user) => {
 				if (user) {
 					setCurrentUser(user);
-					dispatch(downloadTodos(user.uid));
+					dispatch(downloadTodos({ uid: user.uid }));
 					dispatch(downloadProjects({ uid: user.uid }));
 					return;
 				}

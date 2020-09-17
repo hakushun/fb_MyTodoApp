@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../redux/modules/reducers';
 import {
 	Project as typeProject,
 	addProject,
@@ -12,6 +11,7 @@ import {
 import Project from './Project';
 import {
 	deleteTodosWithProject,
+	selectTodos,
 	Todo as typeTodo,
 } from '../../redux/modules/todos';
 import { toggleProjectFormIsShown } from '../../redux/modules/projectFormIsShown';
@@ -32,7 +32,7 @@ const Component: React.FC<Props> = React.memo(
 		const isLoading = useSelector(selectIsLoading);
 		const project = useSelector(selectProject);
 		const projects = useSelector(selectProjects);
-		const todos = useSelector((state: RootState) => state.todos.todos);
+		const todos = useSelector(selectTodos);
 
 		/**
 		 * inputへの入力内容を制御する関数
@@ -74,7 +74,9 @@ const Component: React.FC<Props> = React.memo(
 					currentUser &&
 						dispatch(deleteProject({ id: prjct.id, uid: currentUser.uid }));
 					currentUser &&
-						dispatch(deleteTodosWithProject(prjct.id, currentUser.uid));
+						dispatch(
+							deleteTodosWithProject({ id: prjct.id, uid: currentUser.uid }),
+						);
 				}
 			},
 			[currentUser],
