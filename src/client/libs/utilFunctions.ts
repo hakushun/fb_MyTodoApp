@@ -85,18 +85,33 @@ export const getToday = (): string => {
  * aria-hidden属性の値をtoggleする関数
  * @param boolean
  */
-export const toggleAriaHidden = (boolean: 'true' | 'false'): void => {
-	document.getElementById('header')?.setAttribute('aria-hidden', boolean);
-	document.getElementById('project_list')?.setAttribute('aria-hidden', boolean);
-	document.getElementById('todo_list')?.setAttribute('aria-hidden', boolean);
+export const toggleAriaHidden = (boolean: boolean): void => {
+	document
+		.getElementById('header')
+		?.setAttribute('aria-hidden', boolean.toString());
+	document
+		.getElementById('project_list')
+		?.setAttribute('aria-hidden', boolean.toString());
+	document
+		.getElementById('todo_list')
+		?.setAttribute('aria-hidden', boolean.toString());
 };
 
 /**
  * scrollの許可を制御する関数
  * @param boolean
  */
-export const toggleScrollLock = (boolean: 'true' | 'false'): void => {
+export const toggleScrollLock = (boolean: boolean): void => {
 	const body = document.querySelector('body');
 	body?.removeAttribute('style');
-	boolean === 'true' && body?.setAttribute('style', 'overflow:hidden;');
+	boolean.toString() === 'true' &&
+		body?.setAttribute('style', 'overflow:hidden;');
+};
+
+/**
+ * 引数のtodosが全て完了済みかを判断する関数
+ */
+export const isTodosComplete = (items: Todo[]): boolean => {
+	if (items.length === 0) return false;
+	return items.every((item) => item.status === 'complete');
 };
