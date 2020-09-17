@@ -4,7 +4,13 @@ import { steps, StepAction } from 'redux-effects-steps';
 import { createSelector } from 'reselect';
 import { RootState } from './reducers';
 import axios from 'axios';
-import { saveTodos, calculateId } from '../../libs/utilFunctions';
+import {
+	saveTodos,
+	calculateId,
+	statusToNumber,
+	getToday,
+} from '../../libs/utilFunctions';
+import { deleteProject } from './projects';
 
 axios.defaults.withCredentials = true;
 
@@ -41,18 +47,11 @@ type ChangeStatus = {
 	status: Status;
 	uid: string;
 };
-type DeleteTodosWithProject = {
-	id: number;
-	uid: string;
-};
 
 export const addTodo = actionCreator<AddTodo>('add_todo');
 export const deleteTodo = actionCreator<DeleteTodo>('delete_todo');
 export const updateTodo = actionCreator<UpdateTodo>('update_todo');
 export const changeStatus = actionCreator<ChangeStatus>('change_status');
-export const deleteTodosWithProject = actionCreator<DeleteTodosWithProject>(
-	'delete_todos_with_project',
-);
 export const downloadTodosActions = actionCreator.async<
 	{ uid: string },
 	Todo[],
@@ -132,7 +131,7 @@ const reducer = reducerWithInitialState(initialState)
 		}
 		return state;
 	})
-	.case(deleteTodosWithProject, (state, payload) => {
+	.case(deleteProject, (state, payload) => {
 		saveTodos(
 			payload.uid,
 			state.todos.filter((todo) => todo.projectId !== payload.id),
@@ -160,4 +159,73 @@ export const selectTodos = createSelector(
 export const selectIsLoading = createSelector(
 	[(state: RootState) => state.todos],
 	(todos) => todos.isLoading,
+);
+
+export const selectTodalTodos = createSelector(
+	[(state: RootState) => state.todos.todos],
+	(todos) => todos.filter((todo) => todo.status !== 'complete'),
+);
+
+export const selectTodayTodos = createSelector(
+	[(state: RootState) => state.todos.todos],
+	(todos) =>
+		todos.filter(
+			(todo) => todo.dueDate === getToday() && todo.status !== 'complete',
+		),
+);
+
+export const selectFilteredTodos = createSelector(
+	[
+		(state: RootState) => state.todos.todos,
+		(state: RootState) => state.sortedKey,
+		(state: RootState) => state.selectedPrjId,
+	],
+	(todos, sortedKey, selectedPrjId) => {
+		let sortedTodos: Todo[] = [];
+		if (sortedKey === 'id') {
+			sortedTodos = [...todos.sort((a, b) => (a.id < b.id ? -1 : 1))];
+		}
+		if (sortedKey === 'duedate') {
+			sortedTodos = [...todos.sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1))];
+		}
+		if (sortedKey === 'projectId') {
+			sortedTodos = [
+				...todos.sort((a, b) => (a.projectId < b.projectId ? -1 : 1)),
+			];
+		}
+		if (sortedKey === 'status') {
+			sortedTodos = todos.sort((a, b) => {
+				const _a = statusToNumber(a.status);
+				const _b = statusToNumber(b.status);
+				return _a < _b ? -1 : 1;
+			});
+		}
+		if (selectedPrjId === '0') {
+			return sortedTodos;
+		}
+		sortedTodos = [
+			...todos.filter((todo) => todo.projectId === parseInt(selectedPrjId)),
+		];
+		return sortedTodos;
+	},
+);
+
+export const selectNewTodos = createSelector(
+	[(state: RootState) => state.todos.todos],
+	(todos) => todos.filter((item) => item.status === 'new'),
+);
+
+export const selectInProgressTodos = createSelector(
+	[(state: RootState) => state.todos.todos],
+	(todos) => todos.filter((item) => item.status === 'in_progress'),
+);
+
+export const selectReviewingTodos = createSelector(
+	[(state: RootState) => state.todos.todos],
+	(todos) => todos.filter((item) => item.status === 'reviewing'),
+);
+
+export const selectCompleteTodos = createSelector(
+	[(state: RootState) => state.todos.todos],
+	(todos) => todos.filter((item) => item.status === 'complete'),
 );
