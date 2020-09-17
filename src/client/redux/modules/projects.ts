@@ -32,9 +32,6 @@ type UpdateProject = {
 	project: Project;
 	uid: string;
 };
-type SetProjects = {
-	projects: Project[];
-};
 type ToggleComplete = {
 	id: number;
 	status: boolean;
@@ -44,7 +41,6 @@ type ToggleComplete = {
 export const addProject = actionCreator<AddProject>('add_project');
 export const deleteProject = actionCreator<DeleteProject>('delete_project');
 export const updateProject = actionCreator<UpdateProject>('update_project');
-export const setProjects = actionCreator<SetProjects>('set_projects');
 export const toggleComplete = actionCreator<ToggleComplete>('toogle_complete');
 export const downloadProjectsActions = actionCreator.async<
 	{ uid: string },
@@ -109,10 +105,6 @@ const reducer = reducerWithInitialState(initialState)
 		);
 		savesProjects(payload.uid, [...otherState, payload.project]);
 		return { isLoading: false, projects: [...otherState, payload.project] };
-	})
-	.case(setProjects, (_state, payload) => {
-		console.log('setProjects', [...payload.projects]);
-		return { isLoading: false, projects: [...payload.projects] };
 	})
 	.case(toggleComplete, (state, payload) => {
 		const targetProject = state.projects.find(
