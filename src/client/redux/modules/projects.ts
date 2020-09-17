@@ -1,15 +1,14 @@
-import { Reducer } from 'redux';
+import actionCreatorFactory from 'typescript-fsa';
+import { reducerWithInitialState } from 'typescript-fsa-reducers';
+import { steps, StepAction } from 'redux-effects-steps';
+import { createSelector } from 'reselect';
+import { RootState } from './reducers';
 import axios from 'axios';
 import { savesProjects, calculateId } from '../../libs/utilFunctions';
 
 axios.defaults.withCredentials = true;
 
-// action type
-const add_project = 'add_project';
-const delete_project = 'delete_project';
-const update_project = 'update_project';
-const set_projects = 'set_projects';
-const toggle_complete = 'toggle_complete';
+const actionCreator = actionCreatorFactory();
 
 export interface Project {
 	id: number;
@@ -22,147 +21,137 @@ interface Projects {
 }
 
 type AddProject = {
-	type: typeof add_project;
-	payload: string;
+	title: string;
 	uid: string;
 };
 type DeleteProject = {
-	type: typeof delete_project;
-	payload: number;
+	id: number;
 	uid: string;
 };
 type UpdateProject = {
-	type: typeof update_project;
-	payload: Project;
+	project: Project;
 	uid: string;
 };
 type SetProjects = {
-	type: typeof set_projects;
-	payload: Project[];
+	projects: Project[];
 };
 type ToggleComplete = {
-	type: typeof toggle_complete;
-	payload: { id: number; status: boolean };
+	id: number;
+	status: boolean;
 	uid: string;
 };
 
-// action creator
-export const addProject = (title: string, uid: string): AddProject => {
-	return { type: add_project, payload: title, uid };
-};
-export const deleteProject = (id: number, uid: string): DeleteProject => {
-	return { type: delete_project, payload: id, uid };
-};
-export const updateProject = (project: Project, uid: string): UpdateProject => {
-	return { type: update_project, payload: project, uid };
-};
-export const setProjects = (projects: Project[]): SetProjects => {
-	return { type: set_projects, payload: projects };
-};
-export const toogleComplete = (
-	id: number,
-	status: boolean,
-	uid: string,
-): ToggleComplete => {
-	return { type: toggle_complete, payload: { id, status }, uid };
-};
+export const addProject = actionCreator<AddProject>('add_project');
+export const deleteProject = actionCreator<DeleteProject>('delete_project');
+export const updateProject = actionCreator<UpdateProject>('update_project');
+export const setProjects = actionCreator<SetProjects>('set_projects');
+export const toggleComplete = actionCreator<ToggleComplete>('toogle_complete');
+export const downloadProjectsActions = actionCreator.async<
+	{ uid: string },
+	Project[],
+	Error
+>('download_projects');
 
-export const downloadProjects = (uid: string) => {
-	// ここの型定義が不明
-	return async (dispatch: any) => {
-		const res = await axios.get(`/api/projects/${uid}`);
-		const projects = await JSON.parse(res.data);
-		return dispatch(setProjects(projects));
-	};
-};
-
-type Action =
-	| AddProject
-	| DeleteProject
-	| UpdateProject
-	| SetProjects
-	| ToggleComplete;
+export const downloadProjects = (body: { uid: string }): StepAction =>
+	steps(
+		downloadProjectsActions.started(body),
+		() => axios.get(`/api/projects/${body.uid}`),
+		[
+			({ data }) => {
+				const result = JSON.parse(data);
+				return downloadProjectsActions.done({ params: body, result });
+			},
+			({ response: { data } }) =>
+				downloadProjectsActions.failed({ params: body, error: data }),
+		],
+	);
 
 const initialState: Projects = {
 	isLoading: true,
 	projects: [],
 };
 
-const projects: Reducer<Projects, Action> = (
-	state = initialState,
-	action,
-): Projects => {
-	switch (action.type) {
-		case add_project:
-			savesProjects(action.uid, [
+const reducer = reducerWithInitialState(initialState)
+	.case(addProject, (state, payload) => {
+		savesProjects(payload.uid, [
+			...state.projects,
+			{
+				id: calculateId(state.projects),
+				title: payload.title,
+				isComplete: false,
+			},
+		]);
+		return {
+			isLoading: false,
+			projects: [
 				...state.projects,
 				{
 					id: calculateId(state.projects),
-					title: action.payload,
+					title: payload.title,
 					isComplete: false,
 				},
+			],
+		};
+	})
+	.case(deleteProject, (state, payload) => {
+		savesProjects(
+			payload.uid,
+			state.projects.filter((project) => project.id !== payload.id),
+		);
+		return {
+			isLoading: false,
+			projects: state.projects.filter((project) => project.id !== payload.id),
+		};
+	})
+	.case(updateProject, (state, payload) => {
+		const otherState = state.projects.filter(
+			(project) => project.id !== payload.project.id,
+		);
+		savesProjects(payload.uid, [...otherState, payload.project]);
+		return { isLoading: false, projects: [...otherState, payload.project] };
+	})
+	.case(setProjects, (_state, payload) => {
+		console.log('setProjects', [...payload.projects]);
+		return { isLoading: false, projects: [...payload.projects] };
+	})
+	.case(toggleComplete, (state, payload) => {
+		const targetProject = state.projects.find(
+			(project) => project.id === payload.id,
+		);
+		const otherState = state.projects.filter(
+			(project) => project.id !== payload.id,
+		);
+		if (targetProject) {
+			savesProjects(payload.uid, [
+				...otherState,
+				{ ...targetProject, isComplete: payload.status },
 			]);
 			return {
 				isLoading: false,
 				projects: [
-					...state.projects,
-					{
-						id: calculateId(state.projects),
-						title: action.payload,
-						isComplete: false,
-					},
+					...otherState,
+					{ ...targetProject, isComplete: payload.status },
 				],
 			};
-
-		case delete_project:
-			savesProjects(
-				action.uid,
-				state.projects.filter((project) => project.id !== action.payload),
-			);
-			return {
-				isLoading: false,
-				projects: state.projects.filter(
-					(project) => project.id !== action.payload,
-				),
-			};
-
-		case update_project: {
-			const otherState = state.projects.filter(
-				(project) => project.id !== action.payload.id,
-			);
-			savesProjects(action.uid, [...otherState, action.payload]);
-			return { isLoading: false, projects: [...otherState, action.payload] };
 		}
+		return state;
+	})
+	.case(downloadProjectsActions.done, (_state, { result }) => {
+		return { projects: [...result], isLoading: false };
+	})
+	.case(downloadProjectsActions.failed, (state, { error }) => {
+		console.log(error);
+		return { ...state, isLoading: false };
+	});
 
-		case set_projects:
-			return { isLoading: false, projects: [...action.payload] };
+export default reducer;
 
-		case toggle_complete: {
-			const targetProject = state.projects.find(
-				(project) => project.id === action.payload.id,
-			);
-			const otherState = state.projects.filter(
-				(project) => project.id !== action.payload.id,
-			);
-			if (targetProject) {
-				savesProjects(action.uid, [
-					...otherState,
-					{ ...targetProject, isComplete: action.payload.status },
-				]);
-				return {
-					isLoading: false,
-					projects: [
-						...otherState,
-						{ ...targetProject, isComplete: action.payload.status },
-					],
-				};
-			}
-			return state;
-		}
+export const selectProjects = createSelector(
+	[(state: RootState) => state.projects],
+	(projects) => projects.projects,
+);
 
-		default:
-			return state;
-	}
-};
-
-export default projects;
+export const selectIsLoading = createSelector(
+	[(state: RootState) => state.projects],
+	(projects) => projects.isLoading,
+);
