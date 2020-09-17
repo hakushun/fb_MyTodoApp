@@ -1,16 +1,14 @@
-import { Reducer } from 'redux';
+import actionCreatorFactory from 'typescript-fsa';
+import { reducerWithInitialState } from 'typescript-fsa-reducers';
+import { steps, StepAction } from 'redux-effects-steps';
+import { createSelector } from 'reselect';
+import { RootState } from './reducers';
 import axios from 'axios';
 import { saveTodos, calculateId } from '../../libs/utilFunctions';
 
 axios.defaults.withCredentials = true;
 
-// action type
-const add_todo = 'add_todo';
-const delete_todo = 'delete_todo';
-const update_todo = 'update_todo';
-const change_status = 'change_status';
-const set_todos = 'set_todos';
-const delete_todos_with_project = 'delete_todos_with_project';
+const actionCreator = actionCreatorFactory();
 
 export type Status = 'new' | 'in_progress' | 'reviewing' | 'complete';
 export interface Todo {
@@ -24,177 +22,142 @@ interface Todos {
 	isLoading: boolean;
 	todos: Todo[];
 }
-
 type AddTodo = {
-	type: 'add_todo';
-	payload: { title: string; dueDate: string; projectId: number };
+	title: string;
+	dueDate: string;
+	projectId: number;
 	uid: string;
 };
 type DeleteTodo = {
-	type: 'delete_todo';
-	payload: number;
+	id: number;
 	uid: string;
 };
 type UpdateTodo = {
-	type: 'update_todo';
-	payload: Todo;
+	todo: Todo;
 	uid: string;
 };
 type ChangeStatus = {
-	type: 'change_status';
-	payload: { id: number; status: Status };
+	id: number;
+	status: Status;
 	uid: string;
-};
-type SetTodos = {
-	type: 'set_todos';
-	payload: Todo[];
 };
 type DeleteTodosWithProject = {
-	type: 'delete_todos_with_project';
-	payload: number;
+	id: number;
 	uid: string;
 };
 
-// action creator
-export const addTodo = (
-	title: string,
-	dueDate: string,
-	projectId: number,
-	uid: string,
-): AddTodo => {
-	return { type: add_todo, payload: { title, dueDate, projectId }, uid };
-};
-
-export const deleteTodo = (id: number, uid: string): DeleteTodo => {
-	return { type: delete_todo, payload: id, uid };
-};
-
-export const updateTodo = (todo: Todo, uid: string): UpdateTodo => {
-	return { type: update_todo, payload: todo, uid };
-};
-
-export const changeStatus = (
-	id: number,
-	status: Status,
-	uid: string,
-): ChangeStatus => {
-	return { type: change_status, payload: { id, status }, uid };
-};
-
-export const setTodos = (todos: Todo[]): SetTodos => {
-	return { type: set_todos, payload: todos };
-};
-export const deleteTodosWithProject = (
-	prjId: number,
-	uid: string,
-): DeleteTodosWithProject => {
-	return { type: delete_todos_with_project, payload: prjId, uid };
-};
-
-export const downloadTodos = (uid: string) => {
-	// ここの型定義が不明
-	return async (dispatch: any) => {
-		const res = await axios.get(`/api/todos/${uid}`);
-		const todos = await JSON.parse(res.data);
-		return dispatch(setTodos(todos));
-	};
-};
-
-type Action =
-	| AddTodo
-	| DeleteTodo
-	| UpdateTodo
-	| ChangeStatus
-	| SetTodos
-	| DeleteTodosWithProject;
+export const addTodo = actionCreator<AddTodo>('add_todo');
+export const deleteTodo = actionCreator<DeleteTodo>('delete_todo');
+export const updateTodo = actionCreator<UpdateTodo>('update_todo');
+export const changeStatus = actionCreator<ChangeStatus>('change_status');
+export const deleteTodosWithProject = actionCreator<DeleteTodosWithProject>(
+	'delete_todos_with_project',
+);
+export const downloadTodosActions = actionCreator.async<
+	{ uid: string },
+	Todo[],
+	Error
+>('download_todos');
+export const downloadTodos = (body: { uid: string }): StepAction =>
+	steps(
+		downloadTodosActions.started(body),
+		() => axios.get(`/api/todos/${body.uid}`),
+		[
+			({ data }) => {
+				const result = JSON.parse(data);
+				return downloadTodosActions.done({ params: body, result });
+			},
+			({ response: { data } }) =>
+				downloadTodosActions.failed({ params: body, error: data }),
+		],
+	);
 
 const initialState: Todos = { isLoading: true, todos: [] };
 
-const todos: Reducer<Todos, Action> = (state = initialState, action): Todos => {
-	switch (action.type) {
-		case add_todo:
-			if (!action.payload) return state;
-			saveTodos(action.uid, [
+const reducer = reducerWithInitialState(initialState)
+	.case(addTodo, (state, payload) => {
+		saveTodos(payload.uid, [
+			...state.todos,
+			{
+				id: calculateId(state.todos),
+				title: payload.title,
+				dueDate: payload.dueDate,
+				status: 'new',
+				projectId: payload.projectId,
+			},
+		]);
+		return {
+			isLoading: false,
+			todos: [
 				...state.todos,
 				{
 					id: calculateId(state.todos),
-					title: action.payload.title,
-					dueDate: action.payload.dueDate,
+					title: payload.title,
+					dueDate: payload.dueDate,
 					status: 'new',
-					projectId: action.payload.projectId,
+					projectId: payload.projectId,
 				},
+			],
+		};
+	})
+	.case(deleteTodo, (state, payload) => {
+		saveTodos(
+			payload.uid,
+			state.todos.filter((todo) => todo.id !== payload.id),
+		);
+		return {
+			isLoading: false,
+			todos: state.todos.filter((todo) => todo.id !== payload.id),
+		};
+	})
+	.case(updateTodo, (state, payload) => {
+		const otherState = state.todos.filter(
+			(todo) => todo.id !== payload.todo.id,
+		);
+		saveTodos(payload.uid, [...otherState, payload.todo]);
+		return { isLoading: false, todos: [...otherState, payload.todo] };
+	})
+	.case(changeStatus, (state, payload) => {
+		const targetTodo = state.todos.find((todo) => todo.id === payload.id);
+		const otherTodos = state.todos.filter((todo) => todo.id !== payload.id);
+		if (targetTodo) {
+			saveTodos(payload.uid, [
+				...otherTodos,
+				{ ...targetTodo, status: payload.status },
 			]);
 			return {
 				isLoading: false,
-				todos: [
-					...state.todos,
-					{
-						id: calculateId(state.todos),
-						title: action.payload.title,
-						dueDate: action.payload.dueDate,
-						status: 'new',
-						projectId: action.payload.projectId,
-					},
-				],
+				todos: [...otherTodos, { ...targetTodo, status: payload.status }],
 			};
-
-		case delete_todo:
-			saveTodos(
-				action.uid,
-				state.todos.filter((todo) => todo.id !== action.payload),
-			);
-			return {
-				isLoading: false,
-				todos: state.todos.filter((todo) => todo.id !== action.payload),
-			};
-
-		case update_todo: {
-			const otherState = state.todos.filter(
-				(todo) => todo.id !== action.payload.id,
-			);
-			saveTodos(action.uid, [...otherState, action.payload]);
-			return { isLoading: false, todos: [...otherState, action.payload] };
 		}
+		return state;
+	})
+	.case(deleteTodosWithProject, (state, payload) => {
+		saveTodos(
+			payload.uid,
+			state.todos.filter((todo) => todo.projectId !== payload.id),
+		);
+		return {
+			isLoading: false,
+			todos: state.todos.filter((todo) => todo.projectId !== payload.id),
+		};
+	})
+	.case(downloadTodosActions.done, (_state, { result }) => {
+		return { todos: [...result], isLoading: false };
+	})
+	.case(downloadTodosActions.failed, (state, { error }) => {
+		console.log(error);
+		return { ...state, isLoading: false };
+	});
 
-		case change_status: {
-			const targetTodo = state.todos.find(
-				(todo) => todo.id === action.payload.id,
-			);
-			const otherTodos = state.todos.filter(
-				(todo) => todo.id !== action.payload.id,
-			);
-			if (targetTodo) {
-				saveTodos(action.uid, [
-					...otherTodos,
-					{ ...targetTodo, status: action.payload.status },
-				]);
-				return {
-					isLoading: false,
-					todos: [
-						...otherTodos,
-						{ ...targetTodo, status: action.payload.status },
-					],
-				};
-			}
-			return state;
-		}
+export default reducer;
 
-		case set_todos:
-			return { isLoading: false, todos: [...action.payload] };
+export const selectTodos = createSelector(
+	[(state: RootState) => state.todos],
+	(todos) => todos.todos,
+);
 
-		case delete_todos_with_project:
-			saveTodos(
-				action.uid,
-				state.todos.filter((todo) => todo.projectId !== action.payload),
-			);
-			return {
-				isLoading: false,
-				todos: state.todos.filter((todo) => todo.projectId !== action.payload),
-			};
-
-		default:
-			return state;
-	}
-};
-
-export default todos;
+export const selectIsLoading = createSelector(
+	[(state: RootState) => state.todos],
+	(todos) => todos.isLoading,
+);
