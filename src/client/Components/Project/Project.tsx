@@ -2,15 +2,13 @@ import React from 'react';
 import { Project as typeProject } from '../../redux/modules/projects';
 import ProjectForm from './ProjectForm';
 import ProjectList from './ProjectList';
-import { Todo as typeTodo } from '../../redux/modules/todos';
 import { useSelector } from 'react-redux';
 import { selectProjectFormIsShown } from '../../redux/modules/projectFormIsShown';
 
 type Props = {
-	projects: typeProject[];
+	incompleteProjects: typeProject[];
+	completeProjects: typeProject[];
 	isLoading: boolean;
-	todos: typeTodo[];
-	currentUser: firebase.User | null;
 	project: typeProject;
 	handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	handleSubmit: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
@@ -26,15 +24,13 @@ type Props = {
 	handleCancelInput: (
 		e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
 	) => void;
-	isTodosComplete: (items: typeTodo[]) => boolean;
 };
 
 const Project: React.FC<Props> = React.memo(
 	({
-		projects,
+		incompleteProjects,
+		completeProjects,
 		isLoading,
-		todos,
-		currentUser,
 		project,
 		handleChange,
 		handleSubmit,
@@ -42,7 +38,6 @@ const Project: React.FC<Props> = React.memo(
 		handleEdit,
 		handleUpdate,
 		handleCancelInput,
-		isTodosComplete,
 	}) => {
 		const projectFormIsShown = useSelector(selectProjectFormIsShown);
 
@@ -58,13 +53,11 @@ const Project: React.FC<Props> = React.memo(
 					/>
 				)}
 				<ProjectList
-					projects={projects}
+					incompleteProjects={incompleteProjects}
+					completeProjects={completeProjects}
 					isLoading={isLoading}
-					todos={todos}
-					currentUser={currentUser}
 					handleDelete={handleDelete}
 					handleEdit={handleEdit}
-					isTodosComplete={isTodosComplete}
 				/>
 			</>
 		);

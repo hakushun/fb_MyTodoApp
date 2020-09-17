@@ -1,10 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { useDispatch } from 'react-redux';
-import {
-	Project as typeProject,
-	toggleComplete,
-} from '../../redux/modules/projects';
-import { Todo as typeTodo } from '../../redux/modules/todos';
+import React from 'react';
+import { Project as typeProject } from '../../redux/modules/projects';
 import styled from 'styled-components';
 import Section from '../Common/Section/Section';
 import Heading2 from '../Common/Heading/Heading2';
@@ -62,10 +57,9 @@ const Span = styled.span`
 	}
 `;
 type Props = {
-	projects: typeProject[];
+	incompleteProjects: typeProject[];
+	completeProjects: typeProject[];
 	isLoading: boolean;
-	todos: typeTodo[];
-	currentUser: firebase.User | null;
 	handleDelete: (
 		e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
 		prjct: typeProject,
@@ -74,74 +68,16 @@ type Props = {
 		e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
 		prjct: typeProject,
 	) => void;
-	isTodosComplete: (items: typeTodo[]) => boolean;
 };
 
 const ProjectList: React.FC<Props> = React.memo(
 	({
-		projects,
+		incompleteProjects,
+		completeProjects,
 		isLoading,
-		todos,
-		currentUser,
 		handleDelete,
 		handleEdit,
-		isTodosComplete,
 	}) => {
-		const dispatch = useDispatch();
-
-		const mounted = useRef(false);
-		// ２回目のレンダリング以降に発火
-		useEffect(() => {
-			if (mounted.current) {
-				// 全てのtodoが完了済みのprojectを格納
-				const completeProjects = projects.filter((prjct) =>
-					isTodosComplete(todos.filter((td) => prjct.id === td.projectId)),
-				);
-
-				// 全てのtodoが完了済みでないprojectを格納
-				const incompleteProjects = projects.filter(
-					(prjct) =>
-						!isTodosComplete(todos.filter((td) => prjct.id === td.projectId)),
-				);
-
-				// 該当のprojectがなければreturn
-				if (completeProjects.length === 0 && incompleteProjects.length === 0)
-					return;
-
-				// 全てのtodoが完了済みのprojectを完了済みにする
-				if (completeProjects.length > 0) {
-					completeProjects.forEach(
-						(prjct) =>
-							currentUser &&
-							dispatch(
-								toggleComplete({
-									id: prjct.id,
-									status: true,
-									uid: currentUser.uid,
-								}),
-							),
-					);
-				}
-
-				// 全てのtodoが完了済みでないのprojectを未完了にする
-				if (incompleteProjects.length > 0) {
-					incompleteProjects.forEach(
-						(prjct) =>
-							currentUser &&
-							dispatch(
-								toggleComplete({
-									id: prjct.id,
-									status: false,
-									uid: currentUser.uid,
-								}),
-							),
-					);
-				}
-				return;
-			}
-			mounted.current = true;
-		}, [todos]);
-
 		return (
 			<Section id="project_list" ariahidden={false}>
 				<Heading2 text="Project List" />
@@ -152,50 +88,46 @@ const ProjectList: React.FC<Props> = React.memo(
 						<Card>
 							<Heading3 text="Working Project" />
 							<List id="incomplete_project_list">
-								{projects
-									.filter((prj) => prj.isComplete === false)
-									.map((prj) => {
-										return (
-											<Item key={prj.id}>
-												<Span>{prj.title}</Span>
-												<div>
-													<TernaryButton
-														text="Edit"
-														method={(e) => handleEdit(e, prj)}
-													/>
-													<TernaryButton
-														text="Delete"
-														method={(e) => handleDelete(e, prj)}
-													/>
-												</div>
-											</Item>
-										);
-									})}
+								{incompleteProjects.map((prj) => {
+									return (
+										<Item key={prj.id}>
+											<Span>{prj.title}</Span>
+											<div>
+												<TernaryButton
+													text="Edit"
+													method={(e) => handleEdit(e, prj)}
+												/>
+												<TernaryButton
+													text="Delete"
+													method={(e) => handleDelete(e, prj)}
+												/>
+											</div>
+										</Item>
+									);
+								})}
 							</List>
 						</Card>
 						<Card>
 							<Heading3 text="Complete Project" />
 							<List id="complete_project_list">
-								{projects
-									.filter((prj) => prj.isComplete === true)
-									.map((prj) => {
-										return (
-											<CompleteItem key={prj.id}>
-												<Span>{prj.title}</Span>
-												<div>
-													<TernaryButton
-														disabled={true}
-														text="Edit"
-														method={(e) => handleEdit(e, prj)}
-													/>
-													<TernaryButton
-														text="Delete"
-														method={(e) => handleDelete(e, prj)}
-													/>
-												</div>
-											</CompleteItem>
-										);
-									})}
+								{completeProjects.map((prj) => {
+									return (
+										<CompleteItem key={prj.id}>
+											<Span>{prj.title}</Span>
+											<div>
+												<TernaryButton
+													disabled={true}
+													text="Edit"
+													method={(e) => handleEdit(e, prj)}
+												/>
+												<TernaryButton
+													text="Delete"
+													method={(e) => handleDelete(e, prj)}
+												/>
+											</div>
+										</CompleteItem>
+									);
+								})}
 							</List>
 						</Card>
 					</>
