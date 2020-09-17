@@ -3,7 +3,7 @@ import { reducerWithInitialState } from 'typescript-fsa-reducers';
 import { createSelector } from 'reselect';
 import { RootState } from './reducers';
 import { getToday } from '../../libs/utilFunctions';
-import { Todo } from './todos';
+import { addTodo, Todo, updateTodo } from './todos';
 
 const actionCreator = actionCreatorFactory();
 
@@ -33,6 +33,12 @@ const reducer = reducerWithInitialState(initialState)
 	})
 	.case(editTodo, (state, payload) => {
 		return { ...state, ...payload };
+	})
+	.case(addTodo, () => {
+		return { ...initialState };
+	})
+	.case(updateTodo, () => {
+		return { ...initialState };
 	});
 
 export default reducer;
