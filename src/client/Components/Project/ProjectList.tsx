@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import {
 	Project as typeProject,
-	toogleComplete,
+	toggleComplete,
 } from '../../redux/modules/projects';
 import { Todo as typeTodo } from '../../redux/modules/todos';
 import styled from 'styled-components';
@@ -113,7 +113,13 @@ const ProjectList: React.FC<Props> = React.memo(
 					completeProjects.forEach(
 						(prjct) =>
 							currentUser &&
-							dispatch(toogleComplete(prjct.id, true, currentUser.uid)),
+							dispatch(
+								toggleComplete({
+									id: prjct.id,
+									status: true,
+									uid: currentUser.uid,
+								}),
+							),
 					);
 				}
 
@@ -122,7 +128,13 @@ const ProjectList: React.FC<Props> = React.memo(
 					incompleteProjects.forEach(
 						(prjct) =>
 							currentUser &&
-							dispatch(toogleComplete(prjct.id, false, currentUser.uid)),
+							dispatch(
+								toggleComplete({
+									id: prjct.id,
+									status: false,
+									uid: currentUser.uid,
+								}),
+							),
 					);
 				}
 				return;

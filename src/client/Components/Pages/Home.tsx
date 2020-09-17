@@ -29,7 +29,7 @@ const home: React.FC<Props> = React.memo(
 				if (user) {
 					setCurrentUser(user);
 					dispatch(downloadTodos(user.uid));
-					dispatch(downloadProjects(user.uid));
+					dispatch(downloadProjects({ uid: user.uid }));
 					return;
 				}
 				history.push('/login');

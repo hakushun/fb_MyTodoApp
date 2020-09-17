@@ -27,6 +27,7 @@ import {
 	changePrjId,
 	selectSelectedPrjId,
 } from '../../redux/modules/selectedPrjId';
+import { selectProjects } from '../../redux/modules/projects';
 
 type Props = {
 	currentUser: firebase.User | null;
@@ -38,7 +39,7 @@ const Component: React.FC<Props> = React.memo(
 		const todo = useSelector(selectTodo);
 		const todos = useSelector((state: RootState) => state.todos.todos);
 		const isLoading = useSelector((state: RootState) => state.todos.isLoading);
-		const projects = useSelector((state: RootState) => state.projects.projects);
+		const projects = useSelector(selectProjects);
 		const sortedKey = useSelector(selectSortedKey);
 		const selectedPrjId = useSelector(selectSelectedPrjId);
 		const [localTodos, setLocalTodos] = useState<typeTodo[]>([...todos]);

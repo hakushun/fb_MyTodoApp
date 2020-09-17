@@ -6,6 +6,8 @@ import {
 	addProject,
 	deleteProject,
 	updateProject,
+	selectProjects,
+	selectIsLoading,
 } from '../../redux/modules/projects';
 import Project from './Project';
 import {
@@ -27,13 +29,10 @@ type Props = {
 const Component: React.FC<Props> = React.memo(
 	({ currentUser }): JSX.Element => {
 		const dispatch = useDispatch();
-		const isLoading = useSelector(
-			(state: RootState) => state.projects.isLoading,
-		);
+		const isLoading = useSelector(selectIsLoading);
 		const project = useSelector(selectProject);
-		const projects = useSelector((state: RootState) => state.projects.projects);
+		const projects = useSelector(selectProjects);
 		const todos = useSelector((state: RootState) => state.todos.todos);
-		// const initialProject = { id: 0, title: '', isComplete: false };
 
 		/**
 		 * inputへの入力内容を制御する関数
@@ -52,7 +51,8 @@ const Component: React.FC<Props> = React.memo(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
 				if (!project.title) return;
-				currentUser && dispatch(addProject(project.title, currentUser.uid));
+				currentUser &&
+					dispatch(addProject({ title: project.title, uid: currentUser.uid }));
 				dispatch(changeProject(''));
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
@@ -71,7 +71,8 @@ const Component: React.FC<Props> = React.memo(
 			) => {
 				e.preventDefault();
 				if (window.confirm(`本当に${prjct.title}を削除しますか？`)) {
-					currentUser && dispatch(deleteProject(prjct.id, currentUser.uid));
+					currentUser &&
+						dispatch(deleteProject({ id: prjct.id, uid: currentUser.uid }));
 					currentUser &&
 						dispatch(deleteTodosWithProject(prjct.id, currentUser.uid));
 				}
@@ -103,7 +104,8 @@ const Component: React.FC<Props> = React.memo(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
 				if (!project.title) return;
-				currentUser && dispatch(updateProject(project, currentUser.uid));
+				currentUser &&
+					dispatch(updateProject({ project, uid: currentUser.uid }));
 				dispatch(changeProject(''));
 				toggleAriaHidden('false');
 				toggleScrollLock('false');
