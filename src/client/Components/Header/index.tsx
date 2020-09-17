@@ -3,8 +3,7 @@ import { useSelector } from 'react-redux';
 import Header from './Header';
 import { toggleProjectFormIsShown } from '../../redux/modules/projectFormIsShown';
 import { useDispatch } from 'react-redux';
-import { toggleAriaHidden, toggleScrollLock } from '../../libs/utilFunctions';
-import { selectTodos } from '../../redux/modules/todos';
+import { selectTodalTodos, selectTodayTodos } from '../../redux/modules/todos';
 
 type Props = {
 	currentUser: firebase.User | null;
@@ -14,7 +13,8 @@ type Props = {
 const Component: React.FC<Props> = React.memo(
 	({ currentUser, setCurrentUser }): JSX.Element => {
 		const dispatch = useDispatch();
-		const todos = useSelector(selectTodos);
+		const totalTodos = useSelector(selectTodalTodos);
+		const todayTodos = useSelector(selectTodayTodos);
 
 		/**
 		 * project formを表示する関数
@@ -22,8 +22,6 @@ const Component: React.FC<Props> = React.memo(
 		const handleOpenForm = useCallback(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
-				toggleAriaHidden('true');
-				toggleScrollLock('true');
 				dispatch(toggleProjectFormIsShown(true));
 			},
 			[],
@@ -31,7 +29,8 @@ const Component: React.FC<Props> = React.memo(
 
 		return (
 			<Header
-				todos={todos}
+				totalTodos={totalTodos}
+				todayTodos={todayTodos}
 				currentUser={currentUser}
 				setCurrentUser={setCurrentUser}
 				handleOpenForm={handleOpenForm}

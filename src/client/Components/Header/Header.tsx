@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import NavButton from '../Common/Buttons/NavButton';
 import { auth } from '../../libs/firebase';
 import { Todo } from '../../redux/modules/todos';
-import { getToday } from '../../libs/utilFunctions';
 
 const HeaderWrapper = styled.header`
 	background-color: #dbeeff;
@@ -48,7 +47,8 @@ const Span = styled.span`
 	font-weight: bold;
 `;
 type Props = {
-	todos: Todo[];
+	totalTodos: Todo[];
+	todayTodos: Todo[];
 	currentUser: firebase.User | null;
 	setCurrentUser: React.Dispatch<React.SetStateAction<firebase.User | null>>;
 	handleOpenForm: (
@@ -57,12 +57,13 @@ type Props = {
 };
 
 const Header: React.FC<Props> = React.memo(
-	({ todos, currentUser, setCurrentUser, handleOpenForm }): JSX.Element => {
-		const totalTodos = todos.filter((todo) => todo.status !== 'complete');
-		const todayTodos = todos.filter(
-			(todo) => todo.dueDate === getToday() && todo.status !== 'complete',
-		);
-
+	({
+		totalTodos,
+		todayTodos,
+		currentUser,
+		setCurrentUser,
+		handleOpenForm,
+	}): JSX.Element => {
 		return (
 			<HeaderWrapper id="header" aria-hidden="false">
 				<HeaderInner>
