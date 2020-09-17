@@ -38,7 +38,7 @@ const Selectbox = styled.select`
 	padding: 3px;
 `;
 type Props = {
-	localTodos: typeTodo[];
+	todos: typeTodo[];
 	projects: typeProject[];
 	handleDeleteTodo: (
 		e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
@@ -54,7 +54,7 @@ type Props = {
 
 const TodoTableView: React.FC<Props> = React.memo(
 	({
-		localTodos,
+		todos,
 		projects,
 		handleDeleteTodo,
 		handleEditTodo,
@@ -92,7 +92,7 @@ const TodoTableView: React.FC<Props> = React.memo(
 						</tr>
 					</thead>
 					<tbody>
-						{localTodos.map((item) => {
+						{todos.map((item) => {
 							const targetPrj = projects.find((p) => {
 								return p.id === item.projectId;
 							});

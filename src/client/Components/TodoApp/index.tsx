@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
 	addTodo,
@@ -8,22 +8,21 @@ import {
 	Status as typeStatus,
 	Todo as typeTodo,
 	selectIsLoading,
-	selectTodos,
+	selectFilteredTodos,
+	selectCompleteTodos,
+	selectInProgressTodos,
+	selectNewTodos,
+	selectReviewingTodos,
 } from '../../redux/modules/todos';
 import TodoApp from './TodoApp';
 import { toggleTodoFormIsShown } from '../../redux/modules/todoFormIsShown';
-import {
-	toggleAriaHidden,
-	toggleScrollLock,
-	statusToNumber,
-} from '../../libs/utilFunctions';
 import {
 	changeTodo,
 	editTodo,
 	resetTodo,
 	selectTodo,
 } from '../../redux/modules/todo';
-import { changeKey, selectSortedKey, Key } from '../../redux/modules/sortedKey';
+import { changeKey, Key } from '../../redux/modules/sortedKey';
 import {
 	changePrjId,
 	selectSelectedPrjId,
@@ -38,12 +37,14 @@ const Component: React.FC<Props> = React.memo(
 	({ currentUser }): JSX.Element => {
 		const dispatch = useDispatch();
 		const todo = useSelector(selectTodo);
-		const todos = useSelector(selectTodos);
+		const todos = useSelector(selectFilteredTodos);
+		const newTodos = useSelector(selectNewTodos);
+		const inProgressTodos = useSelector(selectInProgressTodos);
+		const reviewingTodos = useSelector(selectReviewingTodos);
+		const completeTodos = useSelector(selectCompleteTodos);
 		const isLoading = useSelector(selectIsLoading);
 		const projects = useSelector(selectProjects);
-		const sortedKey = useSelector(selectSortedKey);
 		const selectedPrjId = useSelector(selectSelectedPrjId);
-		const [localTodos, setLocalTodos] = useState<typeTodo[]>([...todos]);
 
 		/**
 		 * 入力フォームを表示する関数
@@ -51,11 +52,9 @@ const Component: React.FC<Props> = React.memo(
 		const handleOpenForm = useCallback(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
-				toggleAriaHidden('true');
-				toggleScrollLock('true');
 				dispatch(toggleTodoFormIsShown(true));
 			},
-			[],
+			[dispatch],
 		);
 
 		/**
@@ -85,10 +84,6 @@ const Component: React.FC<Props> = React.memo(
 							uid: currentUser.uid,
 						}),
 					);
-				dispatch(resetTodo());
-				toggleAriaHidden('false');
-				toggleScrollLock('false');
-				dispatch(toggleTodoFormIsShown(false));
 			},
 			[todo, currentUser],
 		);
@@ -114,9 +109,6 @@ const Component: React.FC<Props> = React.memo(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, item: typeTodo) => {
 				e.preventDefault();
 				dispatch(editTodo({ ...item }));
-				toggleAriaHidden('false');
-				toggleScrollLock('false');
-				dispatch(toggleTodoFormIsShown(true));
 			},
 			[dispatch],
 		);
@@ -129,10 +121,6 @@ const Component: React.FC<Props> = React.memo(
 				e.preventDefault();
 				if (!todo.title) return;
 				currentUser && dispatch(updateTodo({ todo, uid: currentUser.uid }));
-				dispatch(resetTodo());
-				toggleAriaHidden('false');
-				toggleScrollLock('false');
-				dispatch(toggleTodoFormIsShown(false));
 			},
 			[todo, currentUser],
 		);
@@ -144,9 +132,6 @@ const Component: React.FC<Props> = React.memo(
 			(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 				e.preventDefault();
 				dispatch(resetTodo());
-				toggleAriaHidden('false');
-				toggleScrollLock('false');
-				dispatch(toggleTodoFormIsShown(false));
 			},
 			[dispatch],
 		);
@@ -239,33 +224,8 @@ const Component: React.FC<Props> = React.memo(
 		const handleSort = useCallback(
 			(key: Key) => {
 				dispatch(changeKey(key));
-				if (key === 'id') {
-					setLocalTodos([...todos.sort((a, b) => (a.id < b.id ? -1 : 1))]);
-					return;
-				}
-				if (key === 'duedate') {
-					setLocalTodos([
-						...todos.sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1)),
-					]);
-					return;
-				}
-				if (key === 'projectId') {
-					setLocalTodos([
-						...todos.sort((a, b) => (a.projectId < b.projectId ? -1 : 1)),
-					]);
-					return;
-				}
-				if (key === 'status') {
-					const sortedTodos = todos.sort((a, b) => {
-						const _a = statusToNumber(a.status);
-						const _b = statusToNumber(b.status);
-						return _a < _b ? -1 : 1;
-					});
-					setLocalTodos([...sortedTodos]);
-					return;
-				}
 			},
-			[todos],
+			[dispatch],
 		);
 
 		/**
@@ -278,42 +238,14 @@ const Component: React.FC<Props> = React.memo(
 			[dispatch],
 		);
 
-		// 選択されたprojectのtodoのみを表示させる
-		useEffect(() => {
-			if (selectedPrjId === '0') {
-				setLocalTodos([...todos]);
-				return;
-			}
-			// 選択されたprojectのtodoのみをlocalTodosに格納
-			setLocalTodos([
-				...todos.filter((td) => td.projectId === parseInt(selectedPrjId)),
-			]);
-		}, [selectedPrjId, todos]);
-
-		// todosに変更があってもソートの内容は保持されたまま表示される
-		useEffect(() => {
-			if (sortedKey === 'id') {
-				handleSort('id');
-				return;
-			}
-			if (sortedKey === 'duedate') {
-				handleSort('duedate');
-				return;
-			}
-			if (sortedKey === 'status') {
-				handleSort('status');
-				return;
-			}
-			if (sortedKey === 'projectId') {
-				handleSort('projectId');
-				return;
-			}
-		}, [sortedKey, todos]);
-
 		return (
 			<TodoApp
 				isLoading={isLoading}
-				localTodos={localTodos}
+				todos={todos}
+				newTodos={newTodos}
+				inProgressTodos={inProgressTodos}
+				reviewingTodos={reviewingTodos}
+				completeTodos={completeTodos}
 				projects={projects}
 				todo={todo}
 				selectedPrjId={selectedPrjId}

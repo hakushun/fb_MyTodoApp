@@ -39,7 +39,11 @@ const InnerWrapper = styled.div`
 `;
 type Props = {
 	isLoading: boolean;
-	localTodos: typeTodo[];
+	todos: typeTodo[];
+	newTodos: typeTodo[];
+	inProgressTodos: typeTodo[];
+	reviewingTodos: typeTodo[];
+	completeTodos: typeTodo[];
 	projects: typeProject[];
 	selectedPrjId: string;
 	handleOpenForm: (
@@ -64,7 +68,11 @@ type Props = {
 const TodoList: React.FC<Props> = React.memo(
 	({
 		isLoading,
-		localTodos,
+		todos,
+		newTodos,
+		inProgressTodos,
+		reviewingTodos,
+		completeTodos,
 		projects,
 		selectedPrjId,
 		handleOpenForm,
@@ -78,7 +86,6 @@ const TodoList: React.FC<Props> = React.memo(
 		handleListByProject,
 	}): JSX.Element => {
 		const [view, setView] = useState<'table' | 'board'>('table');
-
 		return (
 			<Section id="todo_list" ariahidden={false}>
 				<Heading2 text="Todo List" />
@@ -127,7 +134,7 @@ const TodoList: React.FC<Props> = React.memo(
 					<>
 						{view === 'table' ? (
 							<TodoTableView
-								localTodos={localTodos}
+								todos={todos}
 								projects={projects}
 								handleEditTodo={handleEditTodo}
 								handleDeleteTodo={handleDeleteTodo}
@@ -136,7 +143,10 @@ const TodoList: React.FC<Props> = React.memo(
 							/>
 						) : (
 							<TodoBoardView
-								localTodos={localTodos}
+								newTodos={newTodos}
+								inProgressTodos={inProgressTodos}
+								reviewingTodos={reviewingTodos}
+								completeTodos={completeTodos}
 								handleEditTodo={handleEditTodo}
 								handleDeleteTodo={handleDeleteTodo}
 								handleDragstart={handleDragstart}

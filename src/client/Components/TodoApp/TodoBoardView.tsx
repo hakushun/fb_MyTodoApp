@@ -58,7 +58,10 @@ const Droparea = styled.ul`
 	min-height: 100px;
 `;
 type Props = {
-	localTodos: typeTodo[];
+	newTodos: typeTodo[];
+	inProgressTodos: typeTodo[];
+	reviewingTodos: typeTodo[];
+	completeTodos: typeTodo[];
 	handleDeleteTodo: (
 		e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
 		item: typeTodo,
@@ -74,24 +77,16 @@ type Props = {
 
 const TodoBoardView: React.FC<Props> = React.memo(
 	({
-		localTodos,
+		newTodos,
+		inProgressTodos,
+		reviewingTodos,
+		completeTodos,
 		handleDeleteTodo,
 		handleEditTodo,
 		handleDragstart,
 		handleDragover,
 		handleDrop,
 	}): JSX.Element => {
-		const newTodos = localTodos.filter((item) => item.status === 'new');
-		const inProgressTodos = localTodos.filter(
-			(item) => item.status === 'in_progress',
-		);
-		const reviewingTodos = localTodos.filter(
-			(item) => item.status === 'reviewing',
-		);
-		const completeTodos = localTodos.filter(
-			(item) => item.status === 'complete',
-		);
-
 		return (
 			<GridWrapper id="todo_list_board">
 				<NewWrapper>

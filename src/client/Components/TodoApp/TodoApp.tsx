@@ -9,7 +9,11 @@ import { Key } from '../../redux/modules/sortedKey';
 
 type Props = {
 	isLoading: boolean;
-	localTodos: typeTodo[];
+	todos: typeTodo[];
+	newTodos: typeTodo[];
+	inProgressTodos: typeTodo[];
+	reviewingTodos: typeTodo[];
+	completeTodos: typeTodo[];
 	projects: typeProject[];
 	todo: typeTodo;
 	selectedPrjId: string;
@@ -44,7 +48,11 @@ type Props = {
 const TodoApp: React.FC<Props> = React.memo(
 	({
 		isLoading,
-		localTodos,
+		todos,
+		newTodos,
+		inProgressTodos,
+		reviewingTodos,
+		completeTodos,
 		projects,
 		todo,
 		selectedPrjId,
@@ -82,7 +90,11 @@ const TodoApp: React.FC<Props> = React.memo(
 						)}
 						<TodoList
 							isLoading={isLoading}
-							localTodos={localTodos}
+							todos={todos}
+							newTodos={newTodos}
+							inProgressTodos={inProgressTodos}
+							reviewingTodos={reviewingTodos}
+							completeTodos={completeTodos}
 							projects={projects}
 							selectedPrjId={selectedPrjId}
 							handleOpenForm={handleOpenForm}
